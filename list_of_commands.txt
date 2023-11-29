@@ -1,0 +1,17 @@
+python3 main.py data_source.tsv -medals RUS 2014
+python3 main.py data_source.tsv -medals UKR 2014 -output result.txt
+
+python3 main.py data_source.tsv -total 2012
+python3 main.py data_source.tsv -total 2008 -output result.txt
+
+python3 main.py data_source.tsv -overall Ukraine Canada Japan France
+python3 main.py data_source.tsv -overall Ukraine Canada Japan -output result.txt
+
+python3 main.py data_source.tsv -interactive
+python3 main.py data_source.tsv -interactive -output result.txt
+
+python3 main.py data_source.tsv -top 30
+python3 main.py data_source.tsv -top 10000 -output result.txt
+
+python3 main.py data_source.tsv -top 30 M 18-35
+python3 main.py data_source.tsv -top 1000 F 18-22 -output result.txt

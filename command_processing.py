@@ -1,6 +1,7 @@
 from file_processing import process_file
 from validation_function import is_valid
 from format_processing import format_medals_data, format_total_data, format_overall_data, format_interactive_data, format_top_data, output_function
+import re
 
 
 def process_command(args_list):
@@ -31,9 +32,9 @@ def medals(filename, args):
         for pair in medals_data_array:
             medals_dict[pair[0]] += 1
         if args[-2] == '-output':
-            return output_function(format_medals_data(medals_data_array_for_print, medals_dict), args)
+            return output_function(format_medals_data(medals_data_array_for_print, medals_dict, args), args)
         else:
-            return format_medals_data(medals_data_array_for_print, medals_dict)
+            return format_medals_data(medals_data_array_for_print, medals_dict, args)
     else:
         return "Invalid data entered by user [NOC or year]"
 
@@ -45,16 +46,18 @@ def total(filename, args):
             if int(line['Year']) == int(args[0]) and line['Medal'] != "NA" and not (line['Team'], line['Medal'], line['Event']) in total_data:
                 total_data.append((line['Team'], line['Medal'], line['Event']))
         if len(args) > 2 and args[-2] == '-output':
-            return output_function(format_total_data(total_data), args)
+            return output_function(format_total_data(total_data, args), args)
         else:
-            return format_total_data(total_data)
+            return format_total_data(total_data, args)
     else:
         return "Invalid year entered by user for '-total' command"
 
 
 def overall(filename, args):
-    # args = ['Ukraine', 'Canada', 'Japan', ...]
-    for country in args[:-2]:
+    # args = ['Ukraine', 'Canada', 'Japan', ..., '-output', 'result.txt']
+    for country in args:
+        if country == '-output' or re.search(r'\.txt$', country):
+            continue
         if not is_valid(filename, 'Team', country):
             return f"Invalid country name '{country}' entered by user for '-overall' command"
     overall_data = []
@@ -62,9 +65,9 @@ def overall(filename, args):
         if line['Team'] in args and line['Medal'] != "NA" and not (line['Team'], line['Year'], line['Medal'], line['Event']) in overall_data:
             overall_data.append((line['Team'], line['Year'], line['Medal'], line['Event']))
     if len(args) > 3 and args[-2] == '-output':
-        return output_function(format_overall_data(overall_data), args)
+        return output_function(format_overall_data(overall_data, args), args)
     else:
-        return format_overall_data(overall_data)
+        return format_overall_data(overall_data, args)
 
 
 def interactive(filename, args):
@@ -81,7 +84,7 @@ def interactive(filename, args):
                         interactive_data.append((line['Year'], line['Medal'], line['Event']))
                     else:
                         interactive_data.append((line['Year'], None, line['Event']))
-            if args[-2] == '-output':
+            if len(args) > 1 and args[-2] == '-output':
                 print(output_function(format_interactive_data(interactive_data, country), args))
             else:
                 print(format_interactive_data(interactive_data, country))
@@ -94,19 +97,19 @@ def interactive(filename, args):
 def top(filename, args):
     if args[0].isnumeric():
         top_data = []
-        if len(args) > 2 and (args[2] == 'M' or args[2] == 'F'):
+        if len(args) > 2 and args[1] in ['M', 'F'] and '-' in args[2]:
             for line in process_file(filename):
-                if line['Sex'] == args[2] and (int(line['Age']) >= int(args[3].split('-')[0]) and int(line['Age']) <= int(args[3].split('-')[1])) and line['Medal'] != 'NA' and (
-                line['Name'], line['Age'], line['Team'], line['Year'], line['Medal'], line['Event']) not in top_data:
-                    top_data.append((line['Name'], line['Age'], line['Team'], line['Year'], line['Medal'], line['Event']))
+                if line['Sex'] == args[1] and line['Age'] != 'NA' and (int(line['Age']) >= int(args[2].split('-')[0]) and int(line['Age']) <= int(args[2].split('-')[1])) and line['Medal'] != 'NA' and (
+                        line['Name'], line['Year'], line['Medal'], line['Event']) not in top_data:
+                    top_data.append((line['Name'], line['Year'], line['Medal'], line['Event']))
         else:
             for line in process_file(filename):
-                if line['Medal'] != 'NA' and (line['Name'], line['Age'], line['Team'], line['Year'], line['Medal'], line['Event']) not in top_data:
-                    top_data.append((line['Name'], line['Age'], line['Team'], line['Year'], line['Medal'], line['Event']))
+                if line['Medal'] != 'NA' and (line['Name'], line['Year'], line['Medal'], line['Event']) not in top_data:
+                    top_data.append((line['Name'], line['Year'], line['Medal'], line['Event']))
         if len(args) > 2 and args[-2] == '-output':
-            return output_function(format_top_data(top_data, args[0]), args)
+            return output_function(format_top_data(top_data, args), args)
         else:
-            return format_top_data(top_data, args[0])
+            return format_top_data(top_data, args)
     else:
         return "Invalid number entered by user for '-top' command"
 
